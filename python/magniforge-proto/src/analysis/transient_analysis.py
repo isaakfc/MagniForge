@@ -135,17 +135,20 @@ class TransientDetector:
         threshold = scaling_factor * np.median(self.mf_buffer)
         return threshold
 
-    def frame_transient_calculation(self, magnitudes: np.ndarray) -> Tuple[float, float]:
+    def frame_transient_calculation(self, frame: np.ndarray) -> Tuple[float, float]:
         """
         Process a single FFT frame and calculate its transient value
 
         Args:
-            magnitudes: Magnitude spectrum of current FFT frame
+            frame: Complex STFT frame
 
         Returns:
             transient_value: The calculated transient value (graded response value α[n])
             normalised_flux: The normalised flux Φ[n]
         """
+
+        # Obtain positive frequency magnitudes
+        magnitudes = np.abs(frame[:len(frame) // 2])
 
         # Calculate flux for current frame ρ[n]
         flux = self.calculate_spectral_flux(magnitudes)

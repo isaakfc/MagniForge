@@ -2,7 +2,7 @@ import librosa
 import soundfile as sf
 import numpy as np
 import matplotlib.pyplot as plt
-from src.processing import SpectralProcessor, COLASpectralProcessor
+from src.processing import COLASpectralProcessor
 from src.analysis import TransientDetector
 
 
@@ -22,21 +22,17 @@ if __name__ == "__main__":
 
     # Process through STFT and ISTFT
     stft_matrix = processor.stft(signal)
-    # reconstructed_signal = processor_orig.istft(stft_matrix)
     reconstructed_signal = processor.istft(stft_matrix, len(signal))
 
-    # Transpose and switch to only positive frequencies
-    stft_matrix = stft_matrix.T[:FFT_SIZE//2, :]
-
     print(stft_matrix.shape)
-    n_frames = stft_matrix.shape[1]
+    n_frames = stft_matrix.shape[0]  # Number of frames is first dimension now
 
     transient_values = np.zeros(n_frames)
     normalised_fluxes = np.zeros(n_frames)
 
     for i in range(n_frames):
-        magnitudes = np.abs(stft_matrix[:, i])
-        transient_values[i], normalised_fluxes[i] = transient_analyser.frame_transient_calculation(magnitudes)
+        # Compute transient value and spectral flux for each frame
+        transient_values[i], normalised_fluxes[i] = transient_analyser.frame_transient_calculation(stft_matrix[i])
 
     # Create time arrays for plotting
     signal_time = np.arange(len(signal)) / SAMPLE_RATE
@@ -52,15 +48,15 @@ if __name__ == "__main__":
 
     # Plot the normalized flux
     ax2.plot(frame_time, normalised_fluxes)
-    ax2.set_ylabel('Normalized\nFlux')
-    ax2.set_title('Normalized Spectral Flux')
+    ax2.set_ylabel('Smoothed Normalized\nFlux')
+    ax2.set_title('Smoothed Normalized Spectral Flux')
 
     # Plot the transient values
     ax3.plot(frame_time, transient_values)
     ax3.set_ylim(1, 1.5)
-    ax3.set_ylabel('Transient\nValue')
+    ax3.set_ylabel('Smoothed Transient\nValue')
     ax3.set_xlabel('Time (seconds)')
-    ax3.set_title('Transient Detection Values')
+    ax3.set_title('Smoothed Transient Detection Values')
 
     # Adjust layout to prevent overlap
     plt.tight_layout()
